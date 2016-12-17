@@ -33,37 +33,57 @@ import time
 
 def run_programming(s):
   agent = s.agent
+  program = s.genes[0]
+  observations = ""
   
   sumFitness = 0
   # Only functioning for 0'th increment
-  for mission in missions[0]:
-    visited = Set([])
-    agent.startMission( mission, client_pool, MalmoPython.MissionRecordSpec(), 0, 'Agent '+str(s.symbols))
+  #for mission in missions[0]: uncomment this to do the first increment
+  mission = missions[0][0]
+  visited = Set([])
+  agent.startMission( mission, client_pool, MalmoPython.MissionRecordSpec(), 0, 'Agent '+str(program))
 
-    print "Waiting for the mission to start...",
-    world_state = agent.peekWorldState()
-    while not world_state.has_mission_begun:
-        sys.stdout.write(".")
-        time.sleep(0.1)
-        world_state = agent.peekWorldState()
-        for error in world_state.errors:
-            print "Error:",error.text
-    print
-
-    while agent.peekWorldState().is_mission_running:
-      world_state = agent.getWorldState()
+  print "Waiting for the mission to start...",
+  world_state = agent.peekWorldState()
+  while not world_state.has_mission_begun:
+      sys.stdout.write(".")
+      time.sleep(0.1)
+      world_state = agent.peekWorldState()
       for error in world_state.errors:
           print "Error:",error.text
-      if world_state.number_of_observations_since_last_state > 0:
-          msg = world_state.observations[-1].text                
-          observations = json.loads(msg)     
-          x = observations.get(u'XPos')  
-          y = observations.get(u'YPos')   
-          z = observations.get(u'ZPos') 
-          visited.add(x + y + z)
-          parse_program(s.symbols, agent, observations)
-    sumFitness += len(visited)
-    time.sleep(1)
+  print
+
+  prev = []
+  max_stag = 10
+  S = 0
+  D = 0
+  while agent.peekWorldState().is_mission_running:
+    world_state = agent.getWorldState()
+    for error in world_state.errors:
+        print "Error:",error.text
+    if world_state.number_of_observations_since_last_state > 0:
+        msg = world_state.observations[-1].text                
+        observations = json.loads(msg)     
+        x = observations.get(u'XPos')  
+        y = observations.get(u'YPos')   
+        z = observations.get(u'ZPos') 
+        if len(prev) < max_stag: prev.append(x + y + z)
+        else: 
+          if prev.count(x + y + z) == max_stag:
+            S = 50
+          if prev.count(x + y + z) < len(prev):
+            prev = []
+          if len(prev) > 0:
+            prev.pop()
+          prev.insert(0, x + y + z)
+        visited.add(x + y + z)
+        parse_program(program, agent, observations)
+  sumFitness += len(visited)^2 - S - D
+  if len(visited) == 1:
+    sumFitness -= 100
+  
+  print "Calculated fitness... ", sumFitness
+  time.sleep(0.5)
   return sumFitness
 
 def parse_program(p, agent, observations):
@@ -118,13 +138,13 @@ iflte_op = symbol('I')(lambda w, x, y, z: y if w == x else z)
 
 class Simulator(Chromosome):
   functions = (iflte_op,)
-  terminals = 'F', 'B', 'L', 'R', '0', 'A', 'L', 'T', 'S', 'D', 'K', 'U'
+  terminals = 'F', 'B', 'L', 'R'
   agent = MalmoPython.AgentHost()
 
   def _fitness(self):
     return run_programming(self)
 
-p = Population(Simulator, popsize, 6, 3, sum_linker)
+p = Population(Simulator, popsize, 6, 1, sum_linker)
 print("--- Generated Population ---\n")
 print p
 
