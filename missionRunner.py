@@ -1,23 +1,16 @@
 ###################################
 #  Beginnings of GEP implementation for Malmo
-#  Can run parallel, but only occasionally (timing issues)
-#  Removed PyGEP for now, which means there isn't proper karva
-#  coding being parsed, just single line commands
-#  Having a tough time getting PyGEP to work with robots, especially
-#  with the lack of documentation
-#  
-# Anyways, requires joblib for parallel runs, but that's been commented
-# out as distributed runs are very unstable right now. Requires Malmo
-# to be installed according to the github repo. Requires a Malmo Minecraft
-# client to be launched at one of the client_pool addresses/ports. 
 # 
-# Currently, the program will run the programs of n agents and calculate how many
-# steps they took into unique positions. Death, stagnation, and collision are not
-# yet factors. I removed all signs of PyGEP for now and was unsuccessful in getting
-# my own parse tree up quickly to replace it, so it's currently just hardcoded programs
-# with no evolution, so not doing anything interesting.
+# Currently, the program will run 50 agents on 2 scenarios. The fitness is the sum 
+# of unobserved locations visited; death, stagnation, and collisions have yet to be 
+# added. 
 # 
-# There is some parsing, but it's largely untested. It seems to work out for the most part.
+# PyGEP is generating chromosomes and those chromosomes are fed into the parser in programming.py
+# The PyGEP fitness is simply running a simulation and seeing what the fitness it reports is.
+# 
+# While the incremental maps are here and loaded in, it will only test against increment zero 
+#
+# The big thing holding me back is time to run; I can't really tell if my population improves over time.
 ###################################
 
 import MalmoPython
@@ -32,18 +25,22 @@ from sets import Set
 from collections import defaultdict
 import missions as m
 import programming
-#from joblib import Parallel, delayed
+from pygep import Chromosome
+from pygep.chromosome import symbol
+from pygep import *
+from pygep.functions.linkers import sum_linker
+import time
 
-def run_programming(index):
-  agent = agents[index]
+def run_programming(s):
+  agent = s.agent
   
   sumFitness = 0
   # Only functioning for 0'th increment
   for mission in missions[0]:
     visited = Set([])
-    agent.startMission( mission, client_pool, MalmoPython.MissionRecordSpec(), 0, 'Agent ' + str(index) )
+    agent.startMission( mission, client_pool, MalmoPython.MissionRecordSpec(), 0, 'Agent '+str(s.symbols))
 
-    print "Waiting for the mission to start",
+    print "Waiting for the mission to start...",
     world_state = agent.peekWorldState()
     while not world_state.has_mission_begun:
         sys.stdout.write(".")
@@ -53,7 +50,6 @@ def run_programming(index):
             print "Error:",error.text
     print
 
-    # Run each mission according to index programmin
     while agent.peekWorldState().is_mission_running:
       world_state = agent.getWorldState()
       for error in world_state.errors:
@@ -65,7 +61,7 @@ def run_programming(index):
           y = observations.get(u'YPos')   
           z = observations.get(u'ZPos') 
           visited.add(x + y + z)
-          parse_program(programming.agent_program[index], agent, observations)
+          parse_program(s.symbols, agent, observations)
     sumFitness += len(visited)
     time.sleep(1)
   return sumFitness
@@ -94,14 +90,13 @@ def parse_program(p, agent, observations):
       programming.parse(p, agent, term)
 
 sys.stdout = os.fdopen(sys.stdout.fileno(), 'w', 0)  # flush print output immediately
-
+start_time = time.time()
 # -- set up the mission --
 
-num_agents = programming.num_agents
-num_clients = programming.num_clients
-num_generations = 3
+popsize = 50
+num_clients = 1 # Multi-clienting currently disabled because weird things happening with timing
+num_generations = 100
 missions = []
-agents = []
 
 # Looking is determined by the direction the agent is facing and setup in the procedure
 
@@ -114,27 +109,34 @@ for mission_increment in m.mission_files:
         increment.append(MalmoPython.MissionSpec(mission_xml, True))
   missions.append(increment)
 
-for i in range(num_agents):
-  agents.append(MalmoPython.AgentHost())
-
 client_pool = MalmoPython.ClientPool()
 client_pool.add( MalmoPython.ClientInfo('127.0.0.1',10000) )
 client_pool.add( MalmoPython.ClientInfo('127.0.0.1',10001) )
 client_pool.add( MalmoPython.ClientInfo('127.0.0.1',10002) )
 
-# This is the simple, one client after another run_programming
-for i in range(num_generations):
-  fitness = []
-  for j in range(num_agents):
-    fitness.append(run_programming(j))
-  print "-----------------------"
-  print "Gen " + str(i)
-  print fitness
-  print "-----------------------"
-  programming.evolve(fitness)
+iflte_op = symbol('I')(lambda w, x, y, z: y if w == x else z)
 
-# Uncomment for parallel + multiclient runs
-# if __name__ == '__main__':
-#   out = []
-#   out = Parallel(num_clients)(delayed(run_programming)(i) for i in range(num_agents))
-#   print out 
+class Simulator(Chromosome):
+  functions = (iflte_op,)
+  terminals = 'F', 'B', 'L', 'R', '0', 'A', 'L', 'T', 'S', 'D', 'K', 'U'
+  agent = MalmoPython.AgentHost()
+
+  def _fitness(self):
+    return run_programming(self)
+
+p = Population(Simulator, popsize, 6, 3, sum_linker)
+print("--- Generated Population ---\n")
+print p
+
+for _ in xrange(num_generations):
+  if p.best.solved:
+    break
+  print p
+  print "BEST FOUND SO FAR: ", p.best
+  print "BEST FOUND SO FITNESS: ", p.best.fitness
+  p.cycle()
+
+print("FINISHED SIMULATION\n\n")
+print "BEST FOUND: ", p.best
+print "FITNESS: ", p.best.fitness
+print "RUNTIME: ", (time.time() - start_time), " seconds"

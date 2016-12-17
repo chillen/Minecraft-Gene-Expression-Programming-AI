@@ -1,18 +1,8 @@
-# This is the file that primarily needs to be updated
-# Proper parsing and evolution *might* make this start 
-# Properly producing results. Ideally, the 
-# evolve and parse can be handled by PyGEP but running into
-# Issues.
-
-# Temporary fix to get things running at least as a proof of 
-# concept - just hardcode strings and run them. It's capable
-# of interpreting each symbol appropriately for sending actions
-# it just needs to be properly parsed and each generation evolved
-# Fitness is handled in the missionRunner for now, but hopefully
-# that can be pulled into here as well.
-
-num_clients = 1
-num_agents = 2
+# This file contains the info needed to parse a string of functions and
+# terminals and convert it into a runnable malmo program. Currently,
+# I'm doing it dumbly and using a second set of terminals than the one
+# I have before (should be a keyset of this terminal list for the GEP)
+# but it's a quick hackjob and I accept that.
 
 terminals = {}
 terminals["F"] = "move 1"
@@ -25,19 +15,11 @@ terminals["L"] = "lava"
 terminals["T"] = "stone"
 terminals["S"] = "sandstone"
 
-agent_program = [ "IKAIIKAFRKAFR", "IKAFR"  ]
-
-# Write my own evolutions instead of PyGEP? Maybe just use theirs and format similarly?
-def evolve(fitness_array):
-    print ("Evolution not implemented.")
-
-# Karva coding; not properly parsing. Having issues tapping into PyGEP. Primarily lit review for now?
-# Requires updated terminals because orientation matters.
+# Launch the parsing 
 def parse(p, agent, terms):
     sliced = p[1:]
     iflte(sliced[0],sliced[1],sliced[2],sliced[3],sliced,agent,terms)
 
-# Hey parsing is working decently well! That happened :D Now it's just the core GEP stuff. Mutations
 def iflte(w,x,y,z,p,agent,terms):
     # Quickly simplify parsing by slicing appropriate columns
     # If y is an I, then it gets the next 4 params and z gets the next 4 after that

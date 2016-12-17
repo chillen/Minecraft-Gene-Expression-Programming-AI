@@ -2,7 +2,7 @@
 <Mission xmlns="http://ProjectMalmo.microsoft.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
   <About>
-    <Summary></Summary>
+    <Summary>Lava Avoidance [Increment 2]</Summary>
   </About>
 
   <ServerSection>
@@ -19,7 +19,7 @@
         <DrawCuboid x1="0" y1="44" z1="-2" x2="0" y2="46" z2="2" type="lava" />            
         <DrawCuboid x1="-2" y1="44" z1="0" x2="2" y2="46" z2="0" type="lava" />            
       </DrawingDecorator>
-      <ServerQuitFromTimeUp timeLimitMs="5000"/>
+      <ServerQuitFromTimeUp timeLimitMs="2000"/>
       <ServerQuitWhenAnyAgentFinishes/>
     </ServerHandlers>
   </ServerSection>

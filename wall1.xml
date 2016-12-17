@@ -2,7 +2,7 @@
 <Mission xmlns="http://ProjectMalmo.microsoft.com" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
   <About>
-    <Summary></Summary>
+    <Summary>Wall Avoidance [Increment 1]</Summary>
   </About>
 
   <ServerSection>
@@ -18,7 +18,7 @@
         <DrawCuboid x1="-5" y1="45" z1="-5" x2="5" y2="45" z2="5" type="sandstone" />            
         <DrawCuboid x1="-2" y1="45" z1="-2" x2="2" y2="50" z2="2" type="stone" />            
       </DrawingDecorator>
-      <ServerQuitFromTimeUp timeLimitMs="5000"/>
+      <ServerQuitFromTimeUp timeLimitMs="2000"/>
       <ServerQuitWhenAnyAgentFinishes/>
     </ServerHandlers>
   </ServerSection>
