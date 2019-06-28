@@ -1,3 +1,22 @@
+## Updated
+
+* Updated since last submission; now properly parses unigenic chromosomes.
+* Has stagnation penalties.
+* Reduced number of terminals
+* In reducing terminals, they now all mean different things depending on where they are in
+  the operator. This follows Mwuara's solution, but it sucks for this model because it limits
+  the blocks that can be checked, forces a number of view angles, etc. Need to find a better
+  solution, but this one is at least proven to be capable of evolving better behaviour.
+* Now evolves better behaviours; within one generation, a rudimentary wall following
+  behaviour was found in one of the chromosomes. Tests are continuing to run to see
+  how well it can improve in future generations.
+* Updater: Added serious optimizations to runtime by causing the agent to quit if it stagnates 
+  at all and relling the world it doesn't have to recreate each time. Warning: It goes so fast, you should
+  have at least two or three clients rocking at a time just in case, even for one agent. Or increase the
+  delay between reporting fitness, but then that affects every single test whereas having a second client 
+  is just safer. Eerily enough, it can't find the best; the best fitness disappears. At this point
+  it's tweaking the GEP params.
+
 ## Dependencies
 
 Just some quick info in case you didn't feel like installing the dependencies and running yourself :)
@@ -6,6 +25,8 @@ It's pretty straightforward to get running, so feel free to try it out on your o
 
 I've included pygep in the submission, unmodified from the original. I've also included MalmoPython.lib and MalmoPython.pyd
 unmodified from the Malmo github repo. 
+
+*Note: After this asignment, I removed those files so I didn't step on any licensing toes, even though they're probably fine. Go pickem up if you want to run this :)*
 
 To install dependencies, check out the official malmo repo: https://github.com/Microsoft/malmo
 

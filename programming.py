@@ -6,56 +6,53 @@
 
 from sets import Set
 
-terminals = {}
-terminals["F"] = "move 1"
-terminals["B"] = "move -1"
-terminals["L"] = "turn -1"
-terminals["R"] = "turn 1"
-terminals["0"] = ""
-terminals["A"] = "air"
-terminals["L"] = "lava"
-terminals["T"] = "stone"
-terminals["S"] = "sandstone"
-actions = Set([])
-actions.add("F")
-actions.add("B")
-actions.add("L")
-actions.add("R")
-actions.add("0")
+action_map = {}
+action_map["F"] = "move 1"
+action_map["B"] = "move -1"
+action_map["L"] = "turn -1"
+action_map["R"] = "turn 1"
+action_map["0"] = "turn 0"
 
+block_map = {}
+block_map["F"] = "sandstone"
+block_map["B"] = "stone"
+block_map["L"] = "lava"
+block_map["R"] = "air"
 
-# Launch the parsing 
-def parse(p, agent, terms):
-    sliced = p[1:]
-    iflte(sliced[0],sliced[1],sliced[2],sliced[3],sliced,agent,terms)
+view_map = {}
 
-def iflte(w,x,y,z,p,agent,terms):
-    # if x or y is an action, take the action.
-    if w in actions:
-        agent.sendCommand(terms[w])
+def parse(p, agent, term):
+    view_map["F"] = term["F"]
+    view_map["B"] = term["B"]
+    view_map["L"] = term["L"]
+    view_map["R"] = term["R"]
+    iflte(p,agent)
+
+def iflte(p,agent):
+    w = p[0]
+    x = p[1]
+    y = p[2]
+    z = p[3]
+    # Check for lambdas, and resolve
+    # If w is an if, just resolve it and return
+    # IFBL.RRLBasdasd
+    if type(w) != type("string"):
+        iflte(p[4:], agent)
         return
-    if x in actions:
-        agent.sendCommand(terms[x])
+    if type(x) != type("string"):
+        iflte(p[4:], agent)
         return
-    # Quickly simplify parsing by slicing appropriate columns
-    # If y is an I, then it gets the next 4 params and z gets the next 4 after that
-    y_slice = []
-    z_slice = []
-    if y == "I":
-        y_slice = p[4:]
-        z_slice = p[8:] # May not be used
+    z_in = 4
+    # Check if y is a lambda; if it is, z would start at 8, not 4
+    if type(y) != type("string"):
+        z_in = 8
+    if w == "0" or x == "0" or view_map[w] == block_map[x]:
+        if type(y) != type("string"):    
+            iflte(p[4:], agent)
+            return
+        agent.sendCommand(action_map[y])
     else:
-        z_slice = p[4:]
-        
-    if terms[w] == terms[x]:
-        if y == "I":
-            iflte(y_slice[0],y_slice[1],y_slice[2],y_slice[3],y_slice,agent,terms)
-        else: 
-            if (y in actions):
-                agent.sendCommand(terms[y])
-    else:
-        if z == "I":
-            iflte(z_slice[0],z_slice[1],z_slice[2],z_slice[3],z_slice,agent,terms)
-        else: 
-            if (z in actions):
-                agent.sendCommand(terms[z])
+        if type(z) != type("string"):    
+            iflte(p[z_in:], agent)
+            return
+        agent.sendCommand(action_map[z])

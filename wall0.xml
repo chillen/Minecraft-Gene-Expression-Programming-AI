@@ -10,7 +10,7 @@
         <Time><StartTime>1</StartTime></Time>
     </ServerInitialConditions>
     <ServerHandlers>
-      <FlatWorldGenerator forceReset="true" generatorString="3;7,220*1,5*3,2;3;,biome_1"/>
+      <FlatWorldGenerator forceReset="false" generatorString="3;7,220*1,5*3,2;3;,biome_1"/>
       <DrawingDecorator>
         <!-- coordinates for cuboid are inclusive -->
         <DrawCuboid x1="-5" y1="41" z1="-5" x2="5" y2="50" z2="5" type="air" />     
@@ -44,6 +44,7 @@
         </Grid>
       </ObservationFromGrid>
       <ObservationFromFullStats/>
+      <MissionQuitCommands quitDescription="give_up"/>
     </AgentHandlers>
   </AgentSection>
 

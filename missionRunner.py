@@ -41,18 +41,18 @@ def run_programming(s):
   #for mission in missions[0]: uncomment this to do the first increment
   mission = missions[0][0]
   visited = Set([])
-  agent.startMission( mission, client_pool, MalmoPython.MissionRecordSpec(), 0, 'Agent '+str(program))
-
-  print "Waiting for the mission to start...",
+  for i in xrange(20):
+    try:
+      agent.startMission( mission, client_pool, MalmoPython.MissionRecordSpec(), 0, 'Agent '+str(program))
+      break 
+    except:
+      pass
   world_state = agent.peekWorldState()
   while not world_state.has_mission_begun:
-      sys.stdout.write(".")
       time.sleep(0.1)
       world_state = agent.peekWorldState()
       for error in world_state.errors:
           print "Error:",error.text
-  print
-
   prev = []
   max_stag = 10
   S = 0
@@ -71,6 +71,8 @@ def run_programming(s):
         else: 
           if prev.count(x + y + z) == max_stag:
             S = 50
+            agent.sendCommand("quit") # if you've only visited one tile and you've stagnated, just die.
+            break
           if prev.count(x + y + z) < len(prev):
             prev = []
           if len(prev) > 0:
@@ -78,12 +80,10 @@ def run_programming(s):
           prev.insert(0, x + y + z)
         visited.add(x + y + z)
         parse_program(program, agent, observations)
-  sumFitness += len(visited)^2 - S - D
+  sumFitness += len(visited)**2 - S - D
   if len(visited) == 1:
     sumFitness -= 100
-  
-  print "Calculated fitness... ", sumFitness
-  time.sleep(0.5)
+  time.sleep(0.1)
   return sumFitness
 
 def parse_program(p, agent, observations):
@@ -102,10 +102,12 @@ def parse_program(p, agent, observations):
       if yaw == 0:
         d = 7
 
-      term = programming.terminals
-      term["D"] = ground[d]
-      term["K"] = ahead[d]
-      term["U"] = floor[d] 
+      term = {}
+      term["F"] = ground[d]
+      term["B"] = ahead[d]
+      term["R"] = floor[d] 
+      term["L"] = ground[2] 
+
 
       programming.parse(p, agent, term)
 
@@ -138,7 +140,7 @@ iflte_op = symbol('I')(lambda w, x, y, z: y if w == x else z)
 
 class Simulator(Chromosome):
   functions = (iflte_op,)
-  terminals = 'F', 'B', 'L', 'R'
+  terminals = 'F', 'B', 'L', 'R', '0'
   agent = MalmoPython.AgentHost()
 
   def _fitness(self):
