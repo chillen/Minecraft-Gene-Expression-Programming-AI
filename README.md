@@ -1,3 +1,14 @@
+# Minecraft GEP
+
+Hey everyone! This was my thesis project for a course I took in grad school, Evolutionary Computation and Artificial Life.
+For the project, I had to go off and expand on a topic that we reviewed in class and apply it to a different domain. 
+I decided to try using gene expression programming to develop behaviour trees in isolated environments, and then 
+treat those isolated behaviours as endpoints within new, more generalized situations.
+
+![Example Runtime of Minecraft GEP](https://raw.githubusercontent.com/chillen/Minecraft-Gene-Expression-Programming-AI/master/Running.PNG)
+
+The tests weren't overly successful, mostly limited by computing power. It would have been far easier in a simulated environment, but not nearly as cool.
+
 ## Updated
 
 * Updated since last submission; now properly parses unigenic chromosomes.
